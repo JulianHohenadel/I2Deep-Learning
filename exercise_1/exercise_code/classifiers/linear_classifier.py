@@ -30,7 +30,7 @@ class LinearClassifier(object):
         """
         # pylint: disable=too-many-arguments, too-many-locals
         num_train, dim = X.shape
-        num_classes = np.max(y) + 1 # assume y takes values 0...K-1 where K is number of classes
+        num_classes = np.max(y) + 1  # assume y takes values 0...K-1 where K is number of classes
         if self.W is None:
             # lazily initialize W
             self.W = 0.001 * np.random.randn(dim, num_classes)

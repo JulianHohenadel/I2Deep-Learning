@@ -76,7 +76,7 @@ class TwoLayerNet(object):
         ########################################################################
         # TODO: Perform the forward pass, computing the class scores for the   #
         # input. Store the result in the scores variable, which should be an   #
-        # array of shape (N, C).                                               #         
+        # array of shape (N, C).                                               #
         ########################################################################
 
         pass
@@ -235,7 +235,7 @@ class TwoLayerNet(object):
 
 
 def neuralnetwork_hyperparameter_tuning(X_train, y_train, X_val, y_val):
-    best_net = None # store the best model into this 
+    best_net = None  # store the best model into this
 
     ############################################################################
     # TODO: Tune hyperparameters using the validation set. Store your best     #
