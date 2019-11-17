@@ -131,18 +131,41 @@ def cross_entropy_loss_vectorized(W, X, y, reg):
 
     # exps[range(images), y]: for all images pick the correct column with y
     # and take the average of the sum
+    # taken from http://cs231n.github.io/neural-networks-case-study/
     loss = np.sum(-np.log(exps[range(images), y])) / images
 
     # regularization
     # taken from http://cs231n.github.io/neural-networks-case-study/
+    # d/dw(1/2λw^2)=λw
     loss += reg * np.sum(W * W)
 
-    # again to avoid exploding gradients i guess
+    # taken from: http://cs231n.github.io/neural-networks-case-study/
+    # Recalling what the interpretation of the gradient, we see that this result
+    # is highly intuitive: increasing the first or last element of the score
+    # vector f (the scores of the incorrect classes) leads to an increased loss
+    # (due to the positive signs +0.2 and +0.5) - and increasing the loss is
+    # bad, as expected. However, increasing the score of the correct class has
+    # negative influence on the loss. The gradient of -0.7 is telling us that
+    # increasing the correct class score would lead to a decrease of
+    # the loss Li, which makes sense.
     exps[range(images), y] -= 1
 
-    # again ground truth * prediction
     # Shapes: X(500, 3073) * exps(500,10) -> need to transpose X
+    # taken from http://cs231n.github.io/neural-networks-case-study/
+    # p_k = e^f_k / ∑_j e^f_j   L_i = −log(p_yi)
+    # We now wish to understand how the computed scores inside f
+    # should change to decrease the loss Li that this example contributes to
+    # the full objective. In other words, we want to derive the
+    # gradient ∂L_i / ∂f_k. The loss L_i is computed from p,
+    # which in turn depends on f. It’s a fun exercise to the reader to use
+    # the chain rule to derive the gradient, but it turns out to be extremely
+    # simple and interpretible in the end, after a lot of things cancel out:
+    # ∂Li / ∂fk = p_k − 1(y_i = k)
     dW = X.T.dot(exps) / images
+
+    # regularization
+    # d/dw(1/2λw^2)=λw
+    dW += reg * W
 
     ############################################################################
     #                          END OF YOUR CODE                                #
@@ -164,7 +187,7 @@ def softmax_hyperparameter_tuning(X_train, y_train, X_val, y_val):
     # (training_accuracy, validation_accuracy). The accuracy is simply the
     # fraction of data points that are correctly classified.
     iteration = 0
-    lr_stepsize = 0.25e-7
+    lr_stepsize = 0.2e-7
     rs_stepsize = 0.5e4
     results = {}
     best_val = -1
@@ -188,9 +211,6 @@ def softmax_hyperparameter_tuning(X_train, y_train, X_val, y_val):
     # the validation code with a larger value for num_iters.                   #
     ############################################################################
 
-    learning_rate_stepsize = 0.5e-7
-    regularization_strength_stepsize = 0.5e4
-
     for learn_step in learning_rates:
         for regularization_step in regularization_strengths:
             print(f"{iteration}. Iteration")
@@ -211,7 +231,8 @@ def softmax_hyperparameter_tuning(X_train, y_train, X_val, y_val):
 
             if validation_accuracy > best_val:
                 print(
-                    f"""New best: \nTraining acc: {training_accuracy*100} %\nValidation acc: {validation_accuracy*100} % """)
+                    f"""New best: \nTraining acc: {training_accuracy*100}
+                    %\nValidation acc: {validation_accuracy*100} % """)
                 best_val = validation_accuracy
                 best_softmax = softmax
             all_classifiers.append((softmax, validation_accuracy))
