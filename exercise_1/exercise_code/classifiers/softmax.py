@@ -165,7 +165,7 @@ def cross_entropy_loss_vectorized(W, X, y, reg):
 
     # regularization
     # d/dw(1/2λw^2)=λw
-    dW += reg * W
+    dW += 0.0075 * reg * W
 
     ############################################################################
     #                          END OF YOUR CODE                                #
@@ -193,7 +193,7 @@ def softmax_hyperparameter_tuning(X_train, y_train, X_val, y_val):
     best_val = -1
     best_softmax = None
     all_classifiers = []
-    learning_rates = np.arange(2e-7, 5e-7 + lr_stepsize, lr_stepsize)
+    learning_rates = np.arange(2e-7, 6e-7 + lr_stepsize, lr_stepsize)
     regularization_strengths = np.arange(2.5e4, 5e4 + rs_stepsize, rs_stepsize)
 
     ############################################################################
@@ -215,11 +215,11 @@ def softmax_hyperparameter_tuning(X_train, y_train, X_val, y_val):
         for regularization_step in regularization_strengths:
             print(f"{iteration}. Iteration")
             softmax = SoftmaxClassifier()
-            print('Training')
+            # print('Training')
             softmax.train(X_train, y_train, learning_rate=learn_step,
-                          reg=regularization_step, num_iters=15000)
+                          reg=regularization_step, num_iters=17500)
 
-            print('Predicting')
+            # print('Predicting')
             y_pred_train = softmax.predict(X_train)
             y_pred_val = softmax.predict(X_val)
 
@@ -231,8 +231,8 @@ def softmax_hyperparameter_tuning(X_train, y_train, X_val, y_val):
 
             if validation_accuracy > best_val:
                 print(
-                    f"""New best: \nTraining acc: {training_accuracy*100}
-                    %\nValidation acc: {validation_accuracy*100} % """)
+                    f"New best: \nTraining acc: {training_accuracy*100}" +
+                    f"%\nValidation acc: {validation_accuracy*100} % ")
                 best_val = validation_accuracy
                 best_softmax = softmax
             all_classifiers.append((softmax, validation_accuracy))
@@ -259,3 +259,4 @@ def softmax_hyperparameter_tuning(X_train, y_train, X_val, y_val):
     print('best validation accuracy achieved during validation: %f' % best_val)
 
     return best_softmax, results, all_classifiers
+
