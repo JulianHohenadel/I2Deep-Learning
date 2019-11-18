@@ -187,14 +187,14 @@ def softmax_hyperparameter_tuning(X_train, y_train, X_val, y_val):
     # (training_accuracy, validation_accuracy). The accuracy is simply the
     # fraction of data points that are correctly classified.
     iteration = 0
-    lr_stepsize = 0.2e-7
-    rs_stepsize = 0.5e4
+    lr_stepsize = 0.05e-7
+    regularization = 7.75e4
     results = {}
     best_val = -1
     best_softmax = None
     all_classifiers = []
-    learning_rates = np.arange(2e-7, 6e-7 + lr_stepsize, lr_stepsize)
-    regularization_strengths = np.arange(2.5e4, 5e4 + rs_stepsize, rs_stepsize)
+    learning_rates = np.arange(9.0e-7, 12e-7 + lr_stepsize, lr_stepsize)
+    # regularization_strengths = np.arange(7e4, 8e4 + rs_stepsize, rs_stepsize)
 
     ############################################################################
     # TODO:                                                                    #
@@ -212,39 +212,39 @@ def softmax_hyperparameter_tuning(X_train, y_train, X_val, y_val):
     ############################################################################
 
     for learn_step in learning_rates:
-        for regularization_step in regularization_strengths:
-            print(f"{iteration}. Iteration")
-            softmax = SoftmaxClassifier()
-            # print('Training')
-            softmax.train(X_train, y_train, learning_rate=learn_step,
-                          reg=regularization_step, num_iters=17500)
+        # for regularization_step in regularization_strengths:
+        print(f"{iteration}. Epoch")
+        softmax = SoftmaxClassifier()
+        # print('Training')
+        softmax.train(X_train, y_train, learning_rate=learn_step,
+                      reg=regularization, num_iters=13000)
 
-            # print('Predicting')
-            y_pred_train = softmax.predict(X_train)
-            y_pred_val = softmax.predict(X_val)
+        # print('Predicting')
+        y_pred_train = softmax.predict(X_train)
+        y_pred_val = softmax.predict(X_val)
 
-            training_accuracy = np.mean(y_train == y_pred_train)
-            validation_accuracy = np.mean(y_val == y_pred_val)
+        training_accuracy = np.mean(y_train == y_pred_train)
+        validation_accuracy = np.mean(y_val == y_pred_val)
 
-            results[(learn_step, regularization_step)] = (
-                training_accuracy, validation_accuracy)
+        results[(learn_step, regularization)] = (
+            training_accuracy, validation_accuracy)
 
-            if validation_accuracy > best_val:
-                print(
-                    f"New best: \nTraining acc: {training_accuracy*100}" +
-                    f"%\nValidation acc: {validation_accuracy*100} % ")
-                best_val = validation_accuracy
-                best_softmax = softmax
-            all_classifiers.append((softmax, validation_accuracy))
-            iteration += 1
+        if validation_accuracy > best_val:
+            print(
+                f"New best: \nTraining acc:   {training_accuracy*100}" +
+                f"%\nValidation acc: {validation_accuracy*100}% ")
+            best_val = validation_accuracy
+            best_softmax = softmax
+        all_classifiers.append((softmax, validation_accuracy))
+        iteration += 1
 
-            # for learning rate
-            #   for regularization
-            #       softmax classifier
-            #       train
-            #       predict
-            #       accuracy
-            #       compare
+        # for learning rate
+        #   for regularization
+        #       softmax classifier
+        #       train
+        #       predict
+        #       accuracy
+        #       compare
 
     ############################################################################
     #                              END OF YOUR CODE                            #
@@ -259,4 +259,3 @@ def softmax_hyperparameter_tuning(X_train, y_train, X_val, y_val):
     print('best validation accuracy achieved during validation: %f' % best_val)
 
     return best_softmax, results, all_classifiers
-
