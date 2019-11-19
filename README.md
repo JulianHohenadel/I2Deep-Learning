@@ -18,3 +18,10 @@ This repository holds my solutions for the [Introduction to Deep Learning](https
 ***
 
 ## Exercise 1
+### Softmax
+- Implementation of a fully-vectorized loss function for the Softmax classifier
+- Implementation of the fully-vectorized expression for its analytic gradient
+- Check of the implementation with numerical gradient
+- Usage of a validation set to tune the learning rate and regularization strength
+- Optimization of the loss function with SGD
+- Visualization of the final learned weights
