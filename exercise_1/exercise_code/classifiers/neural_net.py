@@ -79,7 +79,13 @@ class TwoLayerNet(object):
         # array of shape (N, C).                                               #
         ########################################################################
 
-        pass
+        # Foreward pass (1/2):
+        # first_layer = weights_1 * x + biases_1
+        first_layer = X.dot(W1) + b1
+        # ReLu after that
+        ReLu = np.maximum(first_layer, 0)
+        # Score = Relu * weights_2 + biases_2
+        scores = ReLu.dot(W2) + b2
 
         ########################################################################
         #                              END OF YOUR CODE                        #
@@ -99,7 +105,16 @@ class TwoLayerNet(object):
         # the regularization loss by 0.5                                       #
         ########################################################################
 
-        pass
+        # Foreward pass (2/2):
+        # Softmax
+        images = X.shape[0]
+
+        exps = np.exp(scores - np.max(scores, axis=1, keepdims=True))
+        exps /= np.sum(exps, axis=1, keepdims=True)
+
+        # Compute loss with regularization (taking both weights into account)
+        loss = np.sum(-np.log(exps[range(images), y])) / images
+        loss += 0.5 * reg * (np.sum(W1 * W1) + np.sum(W2 * W2))
 
         ########################################################################
         #                              END OF YOUR CODE                        #
@@ -114,7 +129,38 @@ class TwoLayerNet(object):
         # of same size                                                         #
         ########################################################################
 
-        pass
+        # backward pass (1/1):
+        # Softmax backwards as usual with softmax derivation
+        exps[range(images), y] -= 1
+        exps /= images
+        # softmax derivation * weights_2
+        delta_layer1 = exps.dot(W2.T)
+        # ReLu backwards
+        # taken from:
+        # https://stackoverflow.com/questions/32546020/neural-network-backpropagation-with-relu
+        delta_layer1[first_layer < 0] = 0
+
+        # new W1:
+        # softmax backwards -> ReLu backwards -> multiply with X + reg with W1
+        grads['W1'] = X.T.dot(delta_layer1) + reg * W1
+
+        # new W2:
+        # softmax backwards -> multiply with ReLu + reg with W2
+        grads['W2'] = ReLu.T.dot(exps) + reg * W2
+
+        # new b1: is the difference how the total error changes when the
+        #         input sum of the neuron is changed
+        # again: go "all the way" back where the deltas are stored
+        #        in this case: softmax -> ReLu -> sum
+        # taken from https://datascience.stackexchange.com/questions/20139/gradients-for-bias-terms-in-backpropagation
+        grads['b1'] = np.sum(delta_layer1, axis=0)
+
+        # new b2: is the difference how the total error changes when the
+        #         input sum of the neuron is changed
+        # again: go "all the way" back where the deltas are stored
+        #        in this case: softmax -> sum
+        # taken from https://datascience.stackexchange.com/questions/20139/gradients-for-bias-terms-in-backpropagation
+        grads['b2'] = np.sum(exps, axis=0)
 
         ########################################################################
         #                              END OF YOUR CODE                        #
@@ -161,7 +207,10 @@ class TwoLayerNet(object):
             # storing hem in X_batch and y_batch respectively.                 #
             ####################################################################
 
-            pass
+            # minibatch creation with np.random.choice
+            rand_choice = np.random.choice(num_train, batch_size, replace=True)
+            X_batch = X[rand_choice]
+            y_batch = y[rand_choice]
 
             ####################################################################
             #                             END OF YOUR CODE                     #
@@ -178,7 +227,9 @@ class TwoLayerNet(object):
             # gradients stored in the grads dictionary defined above.          #
             ####################################################################
 
-            pass
+            # apply learning rate for W1, W2, b1, b2
+            for param in self.params:
+                self.params[param] -= learning_rate * grads[param]
 
             ####################################################################
             #                             END OF YOUR CODE                     #
@@ -225,7 +276,15 @@ class TwoLayerNet(object):
         # TODO: Implement this function; it should be VERY simple!             #
         ########################################################################
 
-        pass
+        # x * weights_1 + biases_1
+        # ReLu
+        first_layer = X.dot(self.params['W1']) + self.params['b1']
+        ReLu = np.maximum(first_layer, 0)
+
+        # x * weights_2 + biases_2
+        scores = ReLu.dot(self.params['W2']) + self.params['b2']
+        # pick highest probability
+        y_pred = np.argmax(scores, axis=1)
 
         ########################################################################
         #                              END OF YOUR CODE                        #
@@ -251,7 +310,69 @@ def neuralnetwork_hyperparameter_tuning(X_train, y_train, X_val, y_val):
     # automatically like we did on the previous exercises.                     #
     ############################################################################
 
-    pass
+    # Simple training loop with different parameter for:
+    # iterations
+    # learning_rate
+    # regularization
+    # init, train, predict, compare to ground truth, get accuracy
+    best_val = -1
+    iteration = 0
+    results = {}
+
+    learn_rates = [2e-4, 3e-3, 1e-4]
+    # new learn_rates for testing
+    # learn_rates = [2e-4, 4e-3, 2e-4]
+    reg_rates = [1e-9, 2e-8, 4e-9]
+    it_rates = [1000, 5000]  # , 10000]
+    # new it_rates for testing
+    # it_rates = [1000, 2500, 5000, 7500]
+
+    reg_test_rates = [5e-1, 5e-3, 5e-5, 5e-7]
+    # new reg_test_rates for testing
+    # reg_test_rates = [7.5e-1, 5e-1, 2.5e-1, 5e-3]
+
+    lr_range = np.arange(learn_rates[0], learn_rates[1], learn_rates[2])
+    rs_range = np.arange(reg_rates[0], reg_rates[1], reg_rates[2])
+    all_iterations = len(lr_range) * len(reg_test_rates) * len(it_rates)
+
+    input_size = X_train.shape[1]
+    hidden_size = 50
+    num_classes = 10
+
+    for it in it_rates:
+        for lr in lr_range:
+            for rs in reg_test_rates:
+                print(f'{iteration} / {all_iterations} Epoch')
+                net = TwoLayerNet(input_size, hidden_size, num_classes)
+                print('Training')
+                training_result = net.train(
+                    X_train, y_train, X_val, y_val, learning_rate=lr,
+                    reg=rs, num_iters=it)
+
+                print('Predicting')
+                y_pred_train = net.predict(X_train)
+                y_pred_val = net.predict(X_val)
+
+                training_accuracy = np.mean(y_train == y_pred_train)
+                validation_accuracy = np.mean(y_val == y_pred_val)
+
+                results[(lr, rs)] = (training_accuracy, validation_accuracy)
+
+                if validation_accuracy > best_val:
+                    print(
+                        f'----------\n' +
+                        f'New best:\n' +
+                        f'learning_rate: {lr}\n' +
+                        f'regularization_strength: {rs}\n' +
+                        f'num_iters: {it}\n')
+                    print(f'Train acc: {training_accuracy*100} % \n' +
+                          f'Valid acc: {validation_accuracy*100} % \n' +
+                          f'----------\n')
+                    best_val = validation_accuracy
+                    best_net = net
+
+                iteration += 1
+    print(results)
 
     ############################################################################
     #                               END OF YOUR CODE                           #
