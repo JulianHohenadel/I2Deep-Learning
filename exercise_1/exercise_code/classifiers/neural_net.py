@@ -319,17 +319,17 @@ def neuralnetwork_hyperparameter_tuning(X_train, y_train, X_val, y_val):
     iteration = 0
     results = {}
 
-    learn_rates = [2e-4, 3e-3, 1e-4]
+    ##learn_rates = [2e-4, 3e-3, 1e-4]
     # new learn_rates for testing
-    # learn_rates = [2e-4, 4e-3, 2e-4]
+    learn_rates = [2e-4, 4e-3, 2e-4]
     reg_rates = [1e-9, 2e-8, 4e-9]
-    it_rates = [1000, 5000]  # , 10000]
+    ##it_rates = [1000, 5000]  # , 10000]
     # new it_rates for testing
-    # it_rates = [1000, 2500, 5000, 7500]
+    it_rates = [1000, 2500, 5000, 7500]
 
-    reg_test_rates = [5e-1, 5e-3, 5e-5, 5e-7]
+    ##reg_test_rates = [5e-1, 5e-3, 5e-5, 5e-7]
     # new reg_test_rates for testing
-    # reg_test_rates = [7.5e-1, 5e-1, 2.5e-1, 5e-3]
+    reg_test_rates = [7.5e-1, 5e-1, 2.5e-1, 5e-3]
 
     lr_range = np.arange(learn_rates[0], learn_rates[1], learn_rates[2])
     rs_range = np.arange(reg_rates[0], reg_rates[1], reg_rates[2])
@@ -372,7 +372,9 @@ def neuralnetwork_hyperparameter_tuning(X_train, y_train, X_val, y_val):
                     best_net = net
 
                 iteration += 1
-    print(results)
+    plain_result = str(results)
+    plain_result.replace(',', ',\n')
+    print(plain_result)
 
     ############################################################################
     #                               END OF YOUR CODE                           #
