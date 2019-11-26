@@ -25,3 +25,16 @@ This repository holds my solutions for the [Introduction to Deep Learning](https
 - Usage of a validation set to tune the learning rate and regularization strength
 - Optimization of the loss function with SGD
 - Visualization of the final learned weights
+
+### Two layer net
+- Implementation of a fully-connected two layer neural network to perform classification on the CIFAR-10 dataset
+- Implementation of the forward and backward pass
+- Training of the NN and hyperparameter training
+- Visialization of the learned weights
+
+### Features
+- Improvement of the Two layer net by using extracted image features instead of raw image data
+- Feature extraction: Histogram of Oriented Gradients (HOG) and color histogram using the hue channel ins HSV color space
+- Training of the NN on the extracted features
+
+***
