@@ -1,6 +1,7 @@
 """Two Layer Network."""
 # pylint: disable=invalid-name
 import numpy as np
+import pprint
 
 
 class TwoLayerNet(object):
@@ -315,66 +316,61 @@ def neuralnetwork_hyperparameter_tuning(X_train, y_train, X_val, y_val):
     # learning_rate
     # regularization
     # init, train, predict, compare to ground truth, get accuracy
+    pp = pprint.PrettyPrinter()
     best_val = -1
     iteration = 0
     results = {}
 
-    ##learn_rates = [2e-4, 3e-3, 1e-4]
-    # new learn_rates for testing
-    learn_rates = [2e-4, 4e-3, 2e-4]
-    reg_rates = [1e-9, 2e-8, 4e-9]
-    ##it_rates = [1000, 5000]  # , 10000]
-    # new it_rates for testing
-    it_rates = [1000, 2500, 5000, 7500]
-
-    ##reg_test_rates = [5e-1, 5e-3, 5e-5, 5e-7]
-    # new reg_test_rates for testing
-    reg_test_rates = [7.5e-1, 5e-1, 2.5e-1, 5e-3]
-
-    lr_range = np.arange(learn_rates[0], learn_rates[1], learn_rates[2])
-    rs_range = np.arange(reg_rates[0], reg_rates[1], reg_rates[2])
-    all_iterations = len(lr_range) * len(reg_test_rates) * len(it_rates)
-
     input_size = X_train.shape[1]
-    hidden_size = 50
     num_classes = 10
 
-    for it in it_rates:
+    # hyperparameters
+    hidden_size = [64, 128, 256]
+    learn_rates = [0.1, 0.41, 0.025]
+    # learn_rates = [4e-4, 2e-3, 0.5e-4]
+    it_rates = [7500, 10000, 12500]
+    reg_rates = [5e-8, 5e-9, 5e-10]
+    
+    lr_range = np.arange(learn_rates[0], learn_rates[1], learn_rates[2])
+    all_iterations = (len(lr_range) * len(reg_rates) *
+                      len(it_rates) * len(hidden_size))
+
+    for hidden in hidden_size:
         for lr in lr_range:
-            for rs in reg_test_rates:
-                print(f'{iteration} / {all_iterations} Epoch')
-                net = TwoLayerNet(input_size, hidden_size, num_classes)
-                print('Training')
-                training_result = net.train(
-                    X_train, y_train, X_val, y_val, learning_rate=lr,
-                    reg=rs, num_iters=it)
+            for it in it_rates:
+                for rs in reg_rates:
+                    print(f'{iteration} / {all_iterations} Epoch')
+                    net = TwoLayerNet(input_size, hidden, num_classes)
+                    print('Training')
+                    training_result = net.train(
+                        X_train, y_train, X_val, y_val, learning_rate=lr,
+                        reg=rs, num_iters=it)
 
-                print('Predicting')
-                y_pred_train = net.predict(X_train)
-                y_pred_val = net.predict(X_val)
+                    print('Predicting')
+                    y_pred_train = net.predict(X_train)
+                    y_pred_val = net.predict(X_val)
 
-                training_accuracy = np.mean(y_train == y_pred_train)
-                validation_accuracy = np.mean(y_val == y_pred_val)
+                    training_accuracy = np.mean(y_train == y_pred_train)
+                    validation_accuracy = np.mean(y_val == y_pred_val)
 
-                results[(lr, rs)] = (training_accuracy, validation_accuracy)
+                    results[(lr, rs)] = (training_accuracy, validation_accuracy)
 
-                if validation_accuracy > best_val:
-                    print(
-                        f'----------\n' +
-                        f'New best:\n' +
-                        f'learning_rate: {lr}\n' +
-                        f'regularization_strength: {rs}\n' +
-                        f'num_iters: {it}\n')
-                    print(f'Train acc: {training_accuracy*100} % \n' +
-                          f'Valid acc: {validation_accuracy*100} % \n' +
-                          f'----------\n')
-                    best_val = validation_accuracy
-                    best_net = net
+                    if validation_accuracy > best_val:
+                        print(
+                            f'---------------\n' +
+                            f'New best:\n' +
+                            f'hidden_size: {hidden}\n' +
+                            f'learning_rate: {lr}\n' +
+                            f'regularization_strength: {rs}\n' +
+                            f'num_iters: {it}\n')
+                        print(f'Train acc: {training_accuracy*100} % \n' +
+                              f'Valid acc: {validation_accuracy*100} % \n' +
+                              f'---------------\n')
+                        best_val = validation_accuracy
+                        best_net = net
 
-                iteration += 1
-    plain_result = str(results)
-    plain_result.replace(',', ',\n')
-    print(plain_result)
+                    iteration += 1
+    pp.pprint(results)
 
     ############################################################################
     #                               END OF YOUR CODE                           #
