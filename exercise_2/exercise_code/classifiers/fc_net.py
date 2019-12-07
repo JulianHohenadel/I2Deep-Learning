@@ -21,7 +21,7 @@ class TwoLayerNet(object):
     """
 
     def __init__(self, input_dim=3 * 32 * 32, hidden_dim=100, num_classes=10,
-                 weight_scale=1e-3, reg=0.0):
+                 weight_scale=1e-3, reg=0.0, loss_function='softmax'):
         """
         Initialize a new network.
     
@@ -36,6 +36,10 @@ class TwoLayerNet(object):
         """
         self.params = {}
         self.reg = reg
+        if loss_function != 'softmax':
+            raise Exception('Wrong loss function')
+        else:
+            self.loss_function = 'softmax'
 
         ############################################################################
         # TODO: Initialize the weights and biases of the two-layer net. Weights    #
@@ -105,11 +109,11 @@ class TwoLayerNet(object):
 class FullyConnectedNet(object):
     """
     A fully-connected neural network with an arbitrary number of hidden layers,
-    ReLU nonlinearities, and a softmax loss function. This will also implement
+    ReLU nonlinearities, and a loss function. This will also implement
     dropout and batch normalization as options. For a network with L layers,
     the architecture will be
     
-    {affine - [batch norm] - relu - [dropout]} x (L - 1) - affine - softmax
+    {affine - [batch norm] - relu - [dropout]} x (L - 1) - affine - loss function
     
     where batch normalization and dropout are optional, and the {...} block is
     repeated L - 1 times.
@@ -120,7 +124,8 @@ class FullyConnectedNet(object):
 
     def __init__(self, hidden_dims, input_dim=3 * 32 * 32, num_classes=10,
                  dropout=0, use_batchnorm=False, reg=0.0,
-                 weight_scale=1e-2, dtype=np.float32, seed=None):
+                 weight_scale=1e-2, dtype=np.float32, seed=None,
+                 loss_function='softmax'):
         """
         Initialize a new FullyConnectedNet.
         
@@ -147,6 +152,13 @@ class FullyConnectedNet(object):
         self.num_layers = 1 + len(hidden_dims)
         self.dtype = dtype
         self.params = {}
+        self.loss_function = loss_function
+        if loss_function == 'softmax':
+            self.chosen_loss_function = softmax_loss
+        elif loss_function == 'l2':
+            self.chosen_loss_function = l2_loss
+        else:
+            raise Exception('Wrong loss function')
 
         ############################################################################
         # TODO: Initialize the parameters of the network, storing all values in    #
@@ -227,22 +239,31 @@ class FullyConnectedNet(object):
             return scores
 
         loss, grads = 0.0, {}
-        ############################################################################
-        # TODO: Implement the backward pass for the fully-connected net. Store the #
-        # loss in the loss variable and gradients in the grads dictionary. Compute #
-        # data loss using softmax, and make sure that grads[k] holds the gradients #
-        # for self.params[k]. Don't forget to add L2 regularization!               #
-        #                                                                          #
-        # When using batch normalization, you don't need to regularize the scale   #
-        # and shift parameters.                                                    #
-        #                                                                          #
-        # NOTE: To ensure that your implementation matches ours and you pass the   #
-        # automated tests, make sure that your L2 regularization includes a factor #
-        # of 0.5 to simplify the expression for the gradient.                      #
-        ############################################################################
+        # We compute loss and gradient of last layer
+        # For another notebook, we will need to switch between different loss functions
+        # By default we choose the softmax loss
+        loss, dscores = self.chosen_loss_function(scores, y)
+        #######################################################################
+        # TODO: Implement the backward pass for the fully-connected net. Store#
+        # the loss in the loss variable and gradients in the grads dictionary.#
+        #                                                                     #
+        #1_FullyConnectedNets.ipynb                                           #
+        # Compute                                                             #
+        # data loss using softmax, and make sure that grads[k] holds the      #
+        # gradients for self.params[k]. Don't forget to add L2 regularization!#
+        #                                                                     #
+        # When using batch normalization, you don't need to regularize the    #
+        # scale and shift parameters.                                         #
+        #                                                                     #
+        # NOTE: To ensure that your implementation matches ours and you pass  #
+        # the automated tests, make sure that your L2 regularization includes #
+        # a factor of 0.5 to simplify the expression for the gradient.        #
+        #                                                                     #
+        #######################################################################
         
-        ############################################################################
-        #                             END OF YOUR CODE                             #
-        ############################################################################
+        #######################################################################
+        #                             END OF YOUR CODE                        #
+        #######################################################################
+
 
         return loss, grads
