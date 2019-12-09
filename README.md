@@ -38,3 +38,24 @@ This repository holds my solutions for the [Introduction to Deep Learning](https
 - Training of the NN on the extracted features
 
 ***
+
+## Exercise 2
+### Fully Connected Nets
+- Implementation of a modular fully connected neural network
+- Affine layer: forward and backward
+- ReLU layer: forward and backward
+- Sandwich layers: affine-relu
+- Loss layers: Softmax
+- Implementation of a solver class to run the training process decoupled from the network model
+- Implementation of different update rules: SGD, SGD+Momentum, Adam
+- Hyperparameter tuning and model training
+
+### Batch Normalization
+- Implementation of a batch normalization layer
+- Training of a network with batch normalization
+- Comparison of different weight initializations and the interaction with batchnorm
+
+### Dropout
+- Implementaion of a dropout layer
+
+***
