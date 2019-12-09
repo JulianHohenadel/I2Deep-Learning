@@ -24,6 +24,21 @@ def affine_forward(x, w, b):
     # TODO: Implement the affine forward pass. Store the result in out. You     #
     # will need to reshape the input into rows.                                 #
     #############################################################################
+    """
+    https://stackoverflow.com/questions/18691084/what-does-1-mean-in-numpy-reshape
+    The criterion to satisfy for providing the new shape is that
+    'The new shape should be compatible with the original shape'
+
+    numpy allow us to give one of new shape parameter as -1
+    (eg: (2,-1) or (-1,3) but not (-1, -1)). It simply means that it is
+    an unknown dimension and we want numpy to figure it out.
+    """
+    # Reshaping x with x.shape[0] and -1
+    # x has shape (2, 4, 5, 6), each x[i] has shape (4, 5, 6)
+    # needed new shape: (2, 4*5*6)
+    out = x.reshape(x.shape[0], -1)
+    # standard x*w + b for foreward pass
+    out = out.dot(w) + b
 
     #############################################################################
     #                             END OF YOUR CODE                              #
@@ -53,7 +68,17 @@ def affine_backward(dout, cache):
     #############################################################################
     # TODO: Implement the affine backward pass.                                 #
     #############################################################################
+    # Foreward = x*w + b
 
+    # dx = upstream derivative * w
+    # dx.shape is equal to x.shape thats why reshaping is needed
+    dx = dout.dot(w.T).reshape(x.shape)
+    # dw = upstream derivative * x
+    # dw.shape = (N,D)^T.dot(N,M)
+    dw = x.reshape((x.shape[0], -1)).T.dot(dout)
+    # db = sum of all row entries of upstream derivative
+    # db.shape collapses from (N, M) to (M, )
+    db = dout.sum(axis=0)
     #############################################################################
     #                             END OF YOUR CODE                              #
     #############################################################################
@@ -296,7 +321,7 @@ def dropout_forward(x, dropout_param):
         # TODO: Implement the training phase forward pass for inverted dropout.   #
         # Store the dropout mask in the mask variable.                            #
         ###########################################################################
-
+        pass
         ###########################################################################
         #                            END OF YOUR CODE                             #
         ###########################################################################
@@ -304,7 +329,7 @@ def dropout_forward(x, dropout_param):
         ###########################################################################
         # TODO: Implement the test phase forward pass for inverted dropout.       #
         ###########################################################################
-
+        pass
         ###########################################################################
         #                            END OF YOUR CODE                             #
         ###########################################################################
@@ -331,7 +356,7 @@ def dropout_backward(dout, cache):
         ###########################################################################
         # TODO: Implement the training phase backward pass for inverted dropout.  #
         ###########################################################################
-        
+        pass
         ###########################################################################
         #                            END OF YOUR CODE                             #
         ###########################################################################
