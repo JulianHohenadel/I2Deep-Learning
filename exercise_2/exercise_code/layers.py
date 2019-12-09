@@ -100,7 +100,7 @@ def relu_forward(x):
     #############################################################################
     # TODO: Implement the ReLU forward pass.                                    #
     #############################################################################
-
+    out = np.maximum(0, x)
     #############################################################################
     #                             END OF YOUR CODE                              #
     #############################################################################
@@ -123,7 +123,16 @@ def relu_backward(dout, cache):
     #############################################################################
     # TODO: Implement the ReLU backward pass.                                   #
     #############################################################################
-
+    """
+    http://cs231n.github.io/neural-networks-case-study/#linear
+    This turns out to be easy because ReLU during the backward pass is
+    effectively a switch. Since r=max(0,x), we have that drdx=1(x>0).
+    Combined with the chain rule, we see that the ReLU unit lets the
+    gradient pass through unchanged if its input was greater than 0,
+    but kills it if its input was less than zero during the forward pass.
+    """
+    dout[x <= 0] = 0
+    dx = dout
     #############################################################################
     #                             END OF YOUR CODE                              #
     #############################################################################
