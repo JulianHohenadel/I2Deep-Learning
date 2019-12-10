@@ -38,6 +38,7 @@ def affine_forward(x, w, b):
     # needed new shape: (2, 4*5*6)
     out = x.reshape(x.shape[0], -1)
     # standard x*w + b for foreward pass
+    # print("out shape from affine" + str(out.shape))
     out = out.dot(w) + b
 
     #############################################################################
@@ -224,8 +225,7 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         #############################################################################
         # TODO: Look at the test-time forward pass for batch normalization.         #
         #############################################################################
-        x = (x - running_mean) / np.sqrt(running_var)
-        out = x * gamma + beta
+        pass
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
