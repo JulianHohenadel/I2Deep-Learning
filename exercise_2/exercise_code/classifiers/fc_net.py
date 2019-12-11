@@ -215,7 +215,22 @@ class FullyConnectedNet(object):
         # beta2, etc. Scale parameters should be initialized to one and shift      #
         # parameters should be initialized to zero.                                #
         ############################################################################
-
+        # unpack hidden_dims
+        # store the dimensions in the right order in the dims array
+        dims = [input_dim, *hidden_dims, num_classes]
+        # initialize Wx and bx as before but this time in a loop
+        # ranging from 1 (W1, b1) up to len(dims) (Wn, bn)
+        for i in range(1, len(dims)):
+            # if batchnorm is wanted add a gamma and beta term for every layer
+            # except for the last one which does per definition not use it
+            if use_batchnorm and i != self.num_layers:
+                self.params['gamma' + str(i)] = np.ones(dims[i])
+                self.params['beta' + str(i)] = np.ones(dims[i])
+            # make sure to initialize Wi with the correct dimensions
+            self.params['W' + str(i)] = np.random.randn(dims[i - 1],
+                                                        dims[i]) * weight_scale
+            # initialize bi with zeros of size dim[i]
+            self.params['b' + str(i)] = np.zeros(dims[i])
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -272,7 +287,43 @@ class FullyConnectedNet(object):
         # self.bn_params[1] to the forward pass for the second batch normalization #
         # layer, etc.                                                              #
         ############################################################################
+        """
+        B=A creates a reference
+        B[:]=A makes a copy
+        numpy.copy(B,A) makes a copy
+        https://stackoverflow.com/questions/19676538/numpy-array-assignment-with-copy
+        """
+        out = X.copy()
+        num_layers = self.num_layers
+        cache = {}
 
+        # again use the same loop staring with 1
+        for i in range(1, num_layers):
+            # if batchnorm is used:
+            if self.use_batchnorm:
+                # use affine_batchnorm_relu_forward
+                out, cache[i] = affine_batchnorm_relu_forward(
+                    out,
+                    self.params['W' + str(i)],
+                    self.params['b' + str(i)],
+                    self.params['gamma' + str(i)],
+                    self.params['beta' + str(i)],
+                    self.bn_params[i - 1])
+            else:
+                # if not: use affine_relu_forward
+                out, cache[i] = affine_relu_forward(out,
+                                            self.params['W' + str(i)],
+                                            self.params['b' + str(i)])
+
+            if self.use_dropout:
+                # if dropout is used: use dropout_forward and merge the caches
+                out, dropout_cache = dropout_forward(out, self.dropout_param)
+                cache[i] = (cache[i], dropout_cache)
+        # the last layer is again per definition affine_forward with index
+        # equal to num_layers
+        scores, cache[num_layers] = affine_forward(out,
+                                            self.params['W' + str(num_layers)],
+                                            self.params['b' + str(num_layers)])
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -303,7 +354,44 @@ class FullyConnectedNet(object):
         # a factor of 0.5 to simplify the expression for the gradient.        #
         #                                                                     #
         #######################################################################
+        num_layers = self.num_layers
+        # calculate the loss over all the weights of all layers
+        loss += 0.5 * self.reg * (np.sum(self.params['W'+str(num_layers)] *
+                            self.params['W'+str(num_layers)]))
+        # backprop the "first" layer of the NN -> use affine_backward
+        # because it was the last layer to get gradients
+        dx, dw, db = affine_backward(dscores, cache[num_layers])
+        # and store them in the grads dictionary
+        grads['W' + str(num_layers)] = dw + self.reg * self.params['W' + str(num_layers)]
+        grads['b' + str(num_layers)] = db
 
+        # now go the reverse direction -> the for loop counts down from last
+        # to first layer
+        for i in range(num_layers - 1, 0, -1):
+            # if batchnorm is used we need to compute the backward pass
+            # with affine_batchnorm_relu_forward
+            # format is pretty ugly but there are so many variables :(
+            if self.use_batchnorm:
+                dx, dw,
+                grads['b' + str(i)],
+                grads['gamma' + str(i)],
+                grads['beta' + str(i)] = affine_batchnorm_relu_backward(dx, cache[i])
+            # if dropout is used we need to compute the backward pass
+            # with dropout_backward, also use the dropout_cache!
+            if self.use_dropout:
+                cache[i], dropout_cache = cache[i]
+                dx = dropout_backward(dx, dropout_cache)
+
+            # no dropout and no batchnorm -> affine_relu_backward
+            else:
+                dx, dw, grads['b' + str(i)] = affine_relu_backward(dx, cache[i])
+
+            # regularize the weights and store the gradients
+            grads['W' + str(i)] = dw + self.reg * self.params['W' + str(i)]
+
+            # compute the loss and regularize it
+            loss += 0.5 * self.reg * np.sum(self.params['W' + str(i)] *
+                                            self.params['W' + str(i)])
         #######################################################################
         #                             END OF YOUR CODE                        #
         #######################################################################
