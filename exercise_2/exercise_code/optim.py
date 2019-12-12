@@ -33,11 +33,12 @@ setting next_w equal to w.
 def sgd(w, dw, config=None):
     """
     Performs vanilla stochastic gradient descent.
-  
+
     config format:
     - learning_rate: Scalar learning rate.
     """
-    if config is None: config = {}
+    if config is None:
+        config = {}
     config.setdefault('learning_rate', 1e-2)
 
     w -= config['learning_rate'] * dw
@@ -47,7 +48,7 @@ def sgd(w, dw, config=None):
 def sgd_momentum(w, dw, config=None):
     """
     Performs stochastic gradient descent with momentum.
-  
+
     config format:
     - learning_rate: Scalar learning rate.
     - momentum: Scalar between 0 and 1 giving the momentum value.
@@ -55,7 +56,8 @@ def sgd_momentum(w, dw, config=None):
     - velocity: A numpy array of the same shape as w and dw used to store a moving
       average of the gradients.
     """
-    if config is None: config = {}
+    if config is None:
+        config = {}
     config.setdefault('learning_rate', 1e-2)
     config.setdefault('momentum', 0.9)
     v = config.get('velocity', np.zeros_like(w))
@@ -65,7 +67,10 @@ def sgd_momentum(w, dw, config=None):
     # TODO: Implement the momentum update formula. Store the updated value in   #
     # the next_w variable. You should also use and update the velocity v.       #
     #############################################################################
-    
+    # new velocity is old velocity - learning rate * gradients
+    v = config['momentum'] * v - config['learning_rate'] * dw
+    # new momentum = old momentum + new velocity
+    next_w = w + v
     #############################################################################
     #                             END OF YOUR CODE                              #
     #############################################################################
@@ -78,7 +83,7 @@ def adam(x, dx, config=None):
     """
     Uses the Adam update rule, which incorporates moving averages of both the
     gradient and its square and a bias correction term.
-  
+
     config format:
     - learning_rate: Scalar learning rate.
     - beta1: Decay rate for moving average of first moment of gradient.
@@ -88,7 +93,8 @@ def adam(x, dx, config=None):
     - v: Moving average of squared gradient.
     - t: Iteration number.
     """
-    if config is None: config = {}
+    if config is None:
+        config = {}
     config.setdefault('learning_rate', 1e-3)
     config.setdefault('beta1', 0.9)
     config.setdefault('beta2', 0.999)

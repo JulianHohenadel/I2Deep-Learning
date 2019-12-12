@@ -312,8 +312,8 @@ class FullyConnectedNet(object):
             else:
                 # if not: use affine_relu_forward
                 out, cache[i] = affine_relu_forward(out,
-                                            self.params['W' + str(i)],
-                                            self.params['b' + str(i)])
+                                                    self.params['W' + str(i)],
+                                                    self.params['b' + str(i)])
 
             if self.use_dropout:
                 # if dropout is used: use dropout_forward and merge the caches
@@ -322,8 +322,8 @@ class FullyConnectedNet(object):
         # the last layer is again per definition affine_forward with index
         # equal to num_layers
         scores, cache[num_layers] = affine_forward(out,
-                                            self.params['W' + str(num_layers)],
-                                            self.params['b' + str(num_layers)])
+                                                   self.params['W' + str(num_layers)],
+                                                   self.params['b' + str(num_layers)])
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -357,7 +357,7 @@ class FullyConnectedNet(object):
         num_layers = self.num_layers
         # calculate the loss over all the weights of all layers
         loss += 0.5 * self.reg * (np.sum(self.params['W'+str(num_layers)] *
-                            self.params['W'+str(num_layers)]))
+                                         self.params['W'+str(num_layers)]))
         # backprop the "first" layer of the NN -> use affine_backward
         # because it was the last layer to get gradients
         dx, dw, db = affine_backward(dscores, cache[num_layers])
@@ -395,6 +395,5 @@ class FullyConnectedNet(object):
         #######################################################################
         #                             END OF YOUR CODE                        #
         #######################################################################
-
 
         return loss, grads
