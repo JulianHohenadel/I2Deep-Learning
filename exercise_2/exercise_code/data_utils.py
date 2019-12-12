@@ -20,7 +20,8 @@ def load_CIFAR10(ROOT):
     return Xtr, Ytr
 
 
-def get_CIFAR10_data(num_training=48000, num_validation=1000, num_test=1000):
+def get_CIFAR10_data(num_training=48000, num_validation=1000,
+                     num_test=1000, path="datasets/cifar10"):
     """
     Load the CIFAR-10 dataset from disk and perform preprocessing to prepare
     it for classifiers. These are the same steps as we used for the SVM, but
@@ -28,7 +29,8 @@ def get_CIFAR10_data(num_training=48000, num_validation=1000, num_test=1000):
     """
     # Load the raw CIFAR-10 data
     data_path = os.path.dirname(os.getcwd())
-    cifar10_dir = data_path + "/datasets/cifar10"
+    cifar10_dir = data_path + path
+    print(f'cifar10 path: {cifar10_dir}')
     X, y = load_CIFAR10(cifar10_dir)
 
     # Subsample the data
