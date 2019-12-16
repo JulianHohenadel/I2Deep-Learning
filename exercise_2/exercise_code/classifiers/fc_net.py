@@ -341,7 +341,7 @@ class FullyConnectedNet(object):
         # TODO: Implement the backward pass for the fully-connected net. Store#
         # the loss in the loss variable and gradients in the grads dictionary.#
         #                                                                     #
-        #1_FullyConnectedNets.ipynb                                           #
+        # 1_FullyConnectedNets.ipynb                                          #
         # Compute                                                             #
         # data loss using softmax, and make sure that grads[k] holds the      #
         # gradients for self.params[k]. Don't forget to add L2 regularization!#
@@ -368,20 +368,20 @@ class FullyConnectedNet(object):
         # now go the reverse direction -> the for loop counts down from last
         # to first layer
         for i in range(num_layers - 1, 0, -1):
-            # if batchnorm is used we need to compute the backward pass
-            # with affine_batchnorm_relu_forward
-            # format is pretty ugly but there are so many variables :(
-            if self.use_batchnorm:
-                dx, dw,
-                grads['b' + str(i)],
-                grads['gamma' + str(i)],
-                grads['beta' + str(i)] = affine_batchnorm_relu_backward(dx, cache[i])
+
             # if dropout is used we need to compute the backward pass
             # with dropout_backward, also use the dropout_cache!
             if self.use_dropout:
                 cache[i], dropout_cache = cache[i]
                 dx = dropout_backward(dx, dropout_cache)
-
+            # if batchnorm is used we need to compute the backward pass
+            # with affine_batchnorm_relu_forward
+            # format is pretty ugly but there are so many variables :(
+            if self.use_batchnorm:
+                (dx, dw,
+                 grads['b' + str(i)],
+                 grads['gamma' + str(i)],
+                 grads['beta' + str(i)]) = affine_batchnorm_relu_backward(dx, cache[i])
             # no dropout and no batchnorm -> affine_relu_backward
             else:
                 dx, dw, grads['b' + str(i)] = affine_relu_backward(dx, cache[i])
