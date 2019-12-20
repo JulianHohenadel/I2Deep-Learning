@@ -3,7 +3,7 @@ MODELS_DIR='models/*'
 CODE_DIR='exercise_code/*py'
 CLASSIFIERS_DIR='exercise_code/classifiers/*py'
 NOTEBOOKS='*.ipynb'
-DATASET_ZIP_NAME='exercise_1_submission.zip'
+DATASET_ZIP_NAME='exercise_2_submission.zip'
 EXERCISE_DIR=$(pwd)
 
 echo 'Zipping file '$DATASET_ZIP_NAME
