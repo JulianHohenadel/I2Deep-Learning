@@ -175,7 +175,44 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         # variance, storing your result in the running_mean and running_var   #
         # variables.                                                          #
         #######################################################################
-        pass
+
+        # calculate the mean of the data x (minibatch)
+        sample_mean = np.mean(x, axis=0)
+
+        # subtract the mean from the data x
+        x_minus_mean = x - sample_mean
+
+        # squared - for variance calculation
+        sq = x_minus_mean ** 2
+
+        # variance = 1/N * sum (x - mean)^2
+        var = 1. / N * np.sum(sq, axis=0)
+
+        # sqrt(var) (eps as numerical_stabilizer)
+        sqrtvar = np.sqrt(var + eps)
+
+        # variance inverse
+        ivar = 1. / sqrtvar
+
+        # normalized = x - mean * 1/variance
+        # --> (x-m)/s
+        x_norm = x_minus_mean * ivar
+
+        # scale parameter gamma (*)
+        gammax = gamma * x_norm
+
+        # shift parameter beta (+)
+        out = gammax + beta
+
+        # adjust running variance and mean with momentum
+        # take old running mean / var primarily and adjust slightly
+        # with current mean / var
+        running_var = momentum * running_var + (1 - momentum) * var
+        running_mean = momentum * running_mean + (1 - momentum) * sample_mean
+
+        # cache everything more or less
+        cache = (out, x_norm, beta, gamma, x_minus_mean, ivar, sqrtvar, var, eps)
+
         #######################################################################
         #                             END OF YOUR CODE                        #
         #######################################################################
@@ -186,7 +223,12 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         # then scale and shift the normalized data using gamma and beta.      #
         # Store the result in the out variable.                               #
         #######################################################################
-        pass
+
+        # normalize x with the running_mean and running_var
+        x = (x - running_mean) / np.sqrt(running_var)
+
+        # also scale and shift with gamma and beta
+        out = x * gamma + beta
         #######################################################################
         #                             END OF YOUR CODE                        #
         #######################################################################
@@ -223,6 +265,47 @@ def batchnorm_backward(dout, cache):
     # TODO: Implement the backward pass for batch normalization. Store the    #
     # results in the dx, dgamma, and dbeta variables.                         #
     ###########################################################################
+
+    # unfold the variables stored in cache
+    # cache = (out, x_norm, beta, gamma, x_minus_mean, ivar, sqrtvar, var, eps)
+    out, x_norm, beta, gamma, x_minus_mean, ivar, sqrtvar, var, eps = cache
+
+    # get the dimensions of the input/output
+    N, D = dout.shape
+
+    # step9
+    dbeta = np.sum(dout, axis=0)
+    dgammax = dout  # not necessary, but more understandable
+
+    # step8
+    dgamma = np.sum(dgammax*x_norm, axis=0)
+    dxhat = dgammax * gamma
+
+    # step7
+    divar = np.sum(dxhat*x_minus_mean, axis=0)
+    dxmu1 = dxhat * ivar
+
+    # step6
+    dsqrtvar = -1. / (sqrtvar**2) * divar
+
+    # step5
+    dvar = 0.5 * 1. / np.sqrt(var+eps) * dsqrtvar
+
+    # step4
+    dsq = 1. / N * np.ones((N, D)) * dvar
+
+    # step3
+    dxmu2 = 2 * x_minus_mean * dsq
+
+    # step2
+    dx1 = (dxmu1 + dxmu2)
+    dmu = -1 * np.sum(dxmu1+dxmu2, axis=0)
+
+    # step1
+    dx2 = 1. / N * np.ones((N, D)) * dmu
+
+    # step0
+    dx = dx1 + dx2
 
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -263,6 +346,42 @@ def spatial_batchnorm_forward(x, gamma, beta, bn_param):
     # should be very short; ours is less than five lines.                     #
     ###########################################################################
 
+    """
+    Normally batch-normalization accepts inputs of shape (N, D) and produces
+    outputs of shape (N, D), where we normalize across the minibatch 
+    dimension N. For data coming from convolutional layers, batch 
+    normalization needs to accept inputs of shape (N, C, H, W) and 
+    produce outputs of shape (N, C, H, W) where the N dimension gives 
+    the minibatch size and the (H, W) dimensions give the spatial 
+    size of the feature map.
+
+    If the feature map was produced using convolutions, 
+    then we expect the statistics of each feature channel 
+    to be relatively consistent both between different images 
+    and different locations within the same image. 
+    Therefore spatial batch normalization computes a mean 
+    and variance for each of the C feature channels by computing 
+    statistics over both the minibatch dimension N and the 
+    spatial dimensions H and W.
+
+    https://www.reddit.com/r/cs231n/comments/443y2g/hints_for_a2/
+    """
+
+    # get shapes
+    N, C, H, W = x.shape
+
+    # reshape as needed:
+    # First transpose x into N, H, W, C
+    # then collapse N, H, W
+    x_reshaped = x.transpose(0, 2, 3, 1).reshape(-1, C)
+
+    # simply use batchnorm forward pass
+    out_reshaped, cache = batchnorm_forward(x_reshaped, gamma, beta, bn_param)
+
+    # shape back:
+    # invert the data "transformation"
+    out = out_reshaped.reshape(N, H, W, C).transpose(0, 3, 1, 2)
+
     ###########################################################################
     #                            END OF YOUR CODE                             #
     ###########################################################################
@@ -292,6 +411,18 @@ def spatial_batchnorm_backward(dout, cache):
     # version of batch normalization defined above. Your implementation       #
     # should be very short; ours is less than five lines.                     #
     ###########################################################################
+
+    # get shapes
+    N, C, H, W = dout.shape
+
+    # reshape as needed just like in the forward pass
+    dout_reshaped = dout.transpose(0, 2, 3, 1).reshape(-1, C)
+
+    # simply use the batchnorm backward pass
+    dx_reshaped, dgamma, dbeta = batchnorm_backward(dout_reshaped, cache)
+
+    # shape back
+    dx = dx_reshaped.reshape(N, H, W, C).transpose(0, 3, 1, 2)
 
     ###########################################################################
     #                            END OF YOUR CODE                             #
