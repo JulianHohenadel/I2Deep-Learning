@@ -27,6 +27,43 @@ class Solver(object):
         self.val_acc_history = []
         self.val_loss_history = []
 
+    def run_epoch(self, model, optim, dataloader, train):
+
+        model.train()
+        device = next(model.parameters()).device
+        val_loss = 0.0
+        val_acc = 0.0
+
+        with torch.set_grad_enabled(train):
+            for iteration, sample in enumerate(dataloader):
+                if iteration >= len(dataloader) and train:
+                    break
+
+                if train:
+                    optim.zero_grad()
+
+                batch = sample[0].detach().to(device)
+                labels = sample[1].detach().to(device)
+                output = model(batch)
+
+                if train:
+                    train_loss = self.loss_func(output, labels)
+                    train_loss.backward()
+                    optim.step()
+                else:
+                    maxs, predict = torch.max(output, 1)
+                    val_loss += self.loss_func(output, labels)
+                    val_acc += float((labels == predict).sum()) / len(predict)
+
+            if train:
+                maxs, predict = torch.max(output, 1)
+                train_acc = float((labels == predict).sum()) / len(predict)
+                return train_loss, train_acc
+            else:
+                val_loss /= len(dataloader)
+                val_acc /= len(dataloader)
+                return val_loss, val_acc
+
     def train(self, model, train_loader, val_loader, num_epochs=10, log_nth=0):
         """
         Train a given model with the provided data.
@@ -66,6 +103,11 @@ class Solver(object):
         #   ...                                                               #
         #######################################################################
 
+        # For each epoch
+        for epoch in range(num_epochs):
+            # run with train and append history
+            # run with val and append history
+            pass
         #######################################################################
         #                             END OF YOUR CODE                        #
         #######################################################################
