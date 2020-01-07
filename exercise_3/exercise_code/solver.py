@@ -1,3 +1,4 @@
+
 import numpy as np
 import torch
 
@@ -19,15 +20,15 @@ class Solver(object):
         self._reset_histories()
 
     def _reset_histories(self):
-        """
-        Resets train and val histories for the accuracy and the loss.
-        """
+
+        # Resets train and val histories for the accuracy and the loss.
+
         self.train_loss_history = []
         self.train_acc_history = []
         self.val_acc_history = []
         self.val_loss_history = []
 
-    def run_epoch(self, model, optim, dataloader, train):
+    def run_epoch(self, model, optim, dataloader, train, epoch, iterations, log_nth):
 
         model.train()
         device = next(model.parameters()).device
@@ -50,6 +51,12 @@ class Solver(object):
                     train_loss = self.loss_func(output, labels)
                     train_loss.backward()
                     optim.step()
+                    iter_per_epoch = len(dataloader)
+                    current_iteration = iteration + epoch * iter_per_epoch + 1
+                    if current_iteration % log_nth == 0:
+                        print(
+                            f'[Iteration {current_iteration}/{iterations}] TRAIN loss: {train_loss}')
+                        self.train_loss_history.append(train_loss.detach())
                 else:
                     maxs, predict = torch.max(output, 1)
                     val_loss += self.loss_func(output, labels)
@@ -103,11 +110,52 @@ class Solver(object):
         #   ...                                                               #
         #######################################################################
 
-        # For each epoch
+        # iteration counter
+        iterations = num_epochs * iter_per_epoch
+
+        # Store:
+        #     loss:
+        #         train: each batch
+        #         val:   after each epoch
+        #     acc:
+        #         train: after each epoch train acc of last mini batch store
+        #         val:   after each epoch
+
+        # Logging:
+        #     loss:
+        #         train: every log_nth iteration
+        #         val:   after each epoch
+        #     acc:
+        #         train: after each epoch train acc of last mini batch store
+        #         val:   after each epoch
+
         for epoch in range(num_epochs):
-            # run with train and append history
-            # run with val and append history
-            pass
+            print('***********************************************************')
+
+            # first training:
+            train_loss, train_acc = self.run_epoch(model, optim, train_loader,
+                                                   True, epoch, iterations, log_nth)
+
+            # train_loss is logged in run_epoch
+            # train_acc is stored after each epoch
+            self.train_acc_history.append(train_acc)
+
+            # then validation:
+            val_loss, val_acc = self.run_epoch(model, optim, val_loader,
+                                               False, epoch, iterations, log_nth)
+
+            # val_acc is stored after each epoch
+            self.val_acc_history.append(val_acc)
+
+            # padding if consistency with train loss is wanted
+            # for i in range(int(iter_per_epoch / log_nth) - 1):
+            #     self.val_loss_history.append(None)
+
+            self.val_loss_history.append(val_loss)
+
+            print(f'[Epoch {epoch + 1}/{num_epochs}] TRAIN\tacc/loss: {train_acc} / {train_loss}')
+            print(f'[Epoch {epoch + 1}/{num_epochs}] VAL\tacc/loss: {val_acc} / {val_loss}')
+
         #######################################################################
         #                             END OF YOUR CODE                        #
         #######################################################################
