@@ -28,7 +28,8 @@ class Solver(object):
         self.val_acc_history = []
         self.val_loss_history = []
 
-    def run_epoch(self, model, optim, dataloader, training, epoch, iterations, log_nth):
+    def run_epoch(self, model, optim, dataloader,
+                  training, epoch, iterations, log_nth):
 
         if training:
             model.train()
@@ -57,17 +58,21 @@ class Solver(object):
                     iter_per_epoch = len(dataloader)
                     current_iteration = iteration + epoch * iter_per_epoch + 1
                     if current_iteration % log_nth == 0:
-                        print(
-                            f'[Iteration {current_iteration}/{iterations}] TRAIN loss: {train_loss}')
+                        print(f'[Iteration {current_iteration}/{iterations}]' +
+                              f' TRAIN loss: {train_loss:.2f}')
                         self.train_loss_history.append(train_loss.detach())
                 else:
                     maxs, predict = torch.max(output, 1)
                     val_loss += self.loss_func(output, labels)
-                    val_acc += float((labels == predict).sum()) / len(predict)
+                    targets_mask = labels >= 0
+                    val_acc += np.mean(
+                        (predict == labels)[targets_mask].data.cpu().numpy())
 
             if training:
                 maxs, predict = torch.max(output, 1)
-                train_acc = float((labels == predict).sum()) / len(predict)
+                targets_mask = labels >= 0
+                train_acc = np.mean(
+                    (predict == labels)[targets_mask].data.cpu().numpy())
                 return train_loss, train_acc
             else:
                 val_loss /= len(dataloader)
@@ -112,7 +117,7 @@ class Solver(object):
         #   [Epoch 1/5] VAL   acc/loss: 0.539/1.310                           #
         #   ...                                                               #
         #######################################################################
-        
+
         # iteration counter
         iterations = num_epochs * iter_per_epoch
 
@@ -136,14 +141,16 @@ class Solver(object):
             print('***********************************************************')
 
             # first training:
-            train_loss, train_acc = self.run_epoch(model, optim, train_loader, True, epoch, iterations, log_nth)
+            train_loss, train_acc = self.run_epoch(
+                model, optim, train_loader, True, epoch, iterations, log_nth)
 
             # train_loss is logged in run_epoch
             # train_acc is stored after each epoch
             self.train_acc_history.append(train_acc)
 
             # then validation:
-            val_loss, val_acc = self.run_epoch(model, optim, val_loader, False, epoch, iterations, log_nth)
+            val_loss, val_acc = self.run_epoch(
+                model, optim, val_loader, False, epoch, iterations, log_nth)
 
             # val_acc is stored after each epoch
             self.val_acc_history.append(val_acc)
@@ -154,8 +161,10 @@ class Solver(object):
 
             self.val_loss_history.append(val_loss)
 
-            print(f'[Epoch {epoch + 1}/{num_epochs}] TRAIN\tacc/loss: {train_acc} / {train_loss}')
-            print(f'[Epoch {epoch + 1}/{num_epochs}] VAL\tacc/loss: {val_acc} / {val_loss}')
+            print(f'[Epoch {epoch + 1}/{num_epochs}] TRAIN\t' +
+                  f'acc/loss: {train_acc:.2f} / {train_loss:.2f}')
+            print(f'[Epoch {epoch + 1}/{num_epochs}] VAL\t' +
+                  f'acc/loss: {val_acc:.2f} / {val_loss:.2f}')
 
         #######################################################################
         #                             END OF YOUR CODE                        #
