@@ -15,9 +15,15 @@ class SegmentationNN(nn.Module):
         #                             YOUR CODE                               #
         #######################################################################
         self.num_classes = num_classes
-        # self.vgg = models.vgg16(pretrained=True).features
         self.base = models.deeplabv3_resnet101(pretrained=True, progress=True)
-        
+
+        aux_classifier = list(self.base.aux_classifier.children())
+        self.base.aux_classifier = nn.Sequential(*aux_classifier[:-1])
+        self.base.aux_classifier.add_module('4', nn.Conv2d(256, num_classes, 1))
+
+        classifier = list(self.base.classifier.children())
+        self.base.classifier = nn.Sequential(*classifier[:-1])
+        self.base.classifier.add_module('4', nn.Conv2d(256, num_classes, 1))
         #######################################################################
         #                           END OF YOUR CODE                          #
         #######################################################################
@@ -33,17 +39,7 @@ class SegmentationNN(nn.Module):
         #######################################################################
         #                             YOUR CODE                               #
         #######################################################################
-        x_input = x
-        # print(x.shape) = torch.Size([10, 3, 240, 240])
-        x = self.base(x)
-        # print(x.shape) = torch.Size([10, 512, 7, 7])
-        # x = self.fcn(x)
-        # up = nn.Upsample(scale_factor=(240/7), mode='bilinear')
-        # x = up(x)
-        # print(x.shape)
-
-        # x['out'] = F.interpolate(x['out'], x_input.size()[2:], mode='bilinear')
-        return x
+        return self.base(x)['aux']
         #######################################################################
         #                           END OF YOUR CODE                          #
         #######################################################################

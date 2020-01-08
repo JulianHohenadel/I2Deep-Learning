@@ -48,7 +48,7 @@ class Solver(object):
 
                 batch = sample[0].detach().to(device)
                 labels = sample[1].detach().to(device)
-                output = model(batch)['aux']
+                output = model(batch)
 
                 if training:
                     train_loss = self.loss_func(output, labels)
