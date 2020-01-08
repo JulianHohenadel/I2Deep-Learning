@@ -28,26 +28,29 @@ class Solver(object):
         self.val_acc_history = []
         self.val_loss_history = []
 
-    def run_epoch(self, model, optim, dataloader, train, epoch, iterations, log_nth):
+    def run_epoch(self, model, optim, dataloader, training, epoch, iterations, log_nth):
 
-        model.train()
+        if training:
+            model.train()
+        else:
+            model.eval()
         device = next(model.parameters()).device
         val_loss = 0.0
         val_acc = 0.0
 
-        with torch.set_grad_enabled(train):
+        with torch.set_grad_enabled(training):
             for iteration, sample in enumerate(dataloader):
-                if iteration >= len(dataloader) and train:
+                if iteration >= len(dataloader) and training:
                     break
 
-                if train:
+                if training:
                     optim.zero_grad()
 
                 batch = sample[0].detach().to(device)
                 labels = sample[1].detach().to(device)
-                output = model(batch)
+                output = model(batch)['aux']
 
-                if train:
+                if training:
                     train_loss = self.loss_func(output, labels)
                     train_loss.backward()
                     optim.step()
@@ -62,7 +65,7 @@ class Solver(object):
                     val_loss += self.loss_func(output, labels)
                     val_acc += float((labels == predict).sum()) / len(predict)
 
-            if train:
+            if training:
                 maxs, predict = torch.max(output, 1)
                 train_acc = float((labels == predict).sum()) / len(predict)
                 return train_loss, train_acc
@@ -109,7 +112,7 @@ class Solver(object):
         #   [Epoch 1/5] VAL   acc/loss: 0.539/1.310                           #
         #   ...                                                               #
         #######################################################################
-
+        
         # iteration counter
         iterations = num_epochs * iter_per_epoch
 
@@ -133,16 +136,14 @@ class Solver(object):
             print('***********************************************************')
 
             # first training:
-            train_loss, train_acc = self.run_epoch(model, optim, train_loader,
-                                                   True, epoch, iterations, log_nth)
+            train_loss, train_acc = self.run_epoch(model, optim, train_loader, True, epoch, iterations, log_nth)
 
             # train_loss is logged in run_epoch
             # train_acc is stored after each epoch
             self.train_acc_history.append(train_acc)
 
             # then validation:
-            val_loss, val_acc = self.run_epoch(model, optim, val_loader,
-                                               False, epoch, iterations, log_nth)
+            val_loss, val_acc = self.run_epoch(model, optim, val_loader, False, epoch, iterations, log_nth)
 
             # val_acc is stored after each epoch
             self.val_acc_history.append(val_acc)
