@@ -5,7 +5,7 @@ import torch
 class Normalize(object):
     """Normalizes keypoints.
     """
-    def __call__(self, sample):
+    def __call__(self, sample, verbose=False):
 
         image, key_pts = sample['image'], sample['keypoints']
 
@@ -14,7 +14,14 @@ class Normalize(object):
         # the image from [0, 255] to [0,1] and keypoints from [0, 96]#
         # to [-1, 1]                                                 #
         ##############################################################
-
+        image = image / 255
+        key_pts = key_pts / 48
+        key_pts = key_pts - 1
+        if verbose:
+            print("image after normalization: ")
+            print(image)
+            print("key_pts after notmalization: ")
+            print(key_pts)
         ##############################################################
         # End of your code                                           #
         ##############################################################

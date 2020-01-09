@@ -32,7 +32,7 @@ class FacialKeypointsDataset(Dataset):
         #                             END OF YOUR CODE                        #
         #######################################################################
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx, verbose=False):
         sample = {'image': None, 'keypoints': None}
         #######################################################################
         # TODO:                                                               #
@@ -43,13 +43,14 @@ class FacialKeypointsDataset(Dataset):
         #######################################################################
         image = get_image(idx, self.key_pts_frame)
         landmarks = get_keypoints(idx, self.key_pts_frame)
-        print("-------------------------")
-        print("Dataloader")
-        print("idx: " + str(idx))
-        print("img shape: " + str(image.shape))
-        print("landmarks: " + str(landmarks.shape))
-        print(landmarks)
-        print("-------------------------")
+        if verbose:
+            print("-------------------------")
+            print("Dataloader")
+            print("idx: " + str(idx))
+            print("img shape: " + str(image.shape))
+            print("landmarks: " + str(landmarks.shape))
+            print(landmarks)
+            print("-------------------------")
         sample = {'image': image, 'keypoints': landmarks}
         #######################################################################
         #                           END OF YOUR CODE                          #
