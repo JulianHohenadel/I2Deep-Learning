@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torchvision
+from torchvision import models
 
 
 class KeypointModel(nn.Module):
@@ -21,7 +23,29 @@ class KeypointModel(nn.Module):
         # and other layers (such as dropout or  batch normalization) to avoid #
         # overfitting.                                                        #
         #######################################################################
-
+        
+        # Conv layers
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=32, kernel_size=(4, 4))
+        self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3, 3), stride=1, padding=0)
+        self.conv3 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=(2, 2), stride=1, padding=0)
+        self.conv4 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=(1, 1), stride=1, padding=0)
+        
+        # Max-Pool layer
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
+        
+        # Dropout layers
+        self.dropout1 = nn.Dropout(p=0.1)
+        self.dropout2 = nn.Dropout(p=0.2)
+        self.dropout3 = nn.Dropout(p=0.3)
+        self.dropout4 = nn.Dropout(p=0.4)
+        self.dropout5 = nn.Dropout(p=0.5)
+        self.dropout6 = nn.Dropout(p=0.6)
+        
+        # Fully connected layers
+        self.fc1 = nn.Linear(in_features=6400, out_features=1000)
+        self.fc2 = nn.Linear(in_features=1000, out_features=500)
+        self.fc3 = nn.Linear(in_features=500, out_features=30)
+        
         #######################################################################
         #                             END OF YOUR CODE                        #
         #######################################################################
@@ -35,7 +59,30 @@ class KeypointModel(nn.Module):
         # a modified x, having gone through all the layers of your model,     #
         # should be returned                                                  #
         #######################################################################
-
+        ## Conv layers
+        x = self.pool(F.elu(self.conv1(x)))
+        x = self.dropout1(x)
+                
+        x = self.pool(F.elu(self.conv2(x)))
+        x = self.dropout2(x)
+        
+        x = self.pool(F.elu(self.conv3(x)))
+        x = self.dropout3(x)
+        
+        x = self.pool(F.elu(self.conv4(x)))
+        x = self.dropout4(x)
+                
+        ## Flatten
+        x = x.view(x.size(0), -1)
+                
+        ## Fully connected layers
+        x = F.elu(self.fc1(x))
+        x = self.dropout5(x)
+                
+        x = F.relu(self.fc2(x))
+        x = self.dropout6(x)
+                
+        x = self.fc3(x)
         #######################################################################
         #                           END OF YOUR CODE                          #
         #######################################################################

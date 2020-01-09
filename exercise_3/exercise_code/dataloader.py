@@ -41,7 +41,9 @@ class FacialKeypointsDataset(Dataset):
         #        {'image': image of shape [C, H, W],                          #
         #         'keypoints': keypoints of shape [num_keypoints, 2]}         #
         #######################################################################
+
         image = get_image(idx, self.key_pts_frame)
+        image = image[np.newaxis,:]
         landmarks = get_keypoints(idx, self.key_pts_frame)
         if verbose:
             print("-------------------------")
