@@ -16,6 +16,11 @@ class Solver(object):
         self.optim = optim
         self.loss_func = loss_func
 
+        self.best_val_acc = 0
+        self.best_model = None
+        self.early_stop_limit = 50
+        self.early_stop_counter = 0
+
         self._reset_histories()
 
     def _reset_histories(self):
@@ -78,7 +83,7 @@ class Solver(object):
             if log_nth:
                 print('[Epoch %d/%d] TRAIN acc/loss: %.3f/%.3f' % (epoch + 1,
                                                                    num_epochs,
-                                                                   train_acc,
+                                                                   train_acc*100,
                                                                    train_loss))
             # VALIDATION
             val_losses = []
@@ -105,7 +110,20 @@ class Solver(object):
             if log_nth:
                 print('[Epoch %d/%d] VAL   acc/loss: %.3f/%.3f' % (epoch + 1,
                                                                    num_epochs,
-                                                                   val_acc,
+                                                                   val_acc*100,
                                                                    val_loss))
-
+                print("Current patience: " + str(self.early_stop_counter + 1))
+            if val_acc > self.best_val_acc:
+                print("New best validition accuracy: " + str(val_acc*100)[:5])
+                self.best_val_acc = val_acc
+                self.best_model = model
+                self.early_stop_counter = -1
+            self.early_stop_counter += 1
+            if self.early_stop_counter >= self.early_stop_limit:
+                print("Early stopping.")
+                print("No improvement for " + 
+                        str(self.early_stop_limit) + " epochs")
+                break
+        print("Best VAL acc: " + str(val_acc*100)[:5])
         print('FINISH.')
+        return self.best_model
