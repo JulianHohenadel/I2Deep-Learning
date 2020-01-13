@@ -86,11 +86,11 @@ class Solver(object):
             train_acc = np.mean((preds == targets)[
                                 targets_mask].detach().cpu().numpy())
             self.train_acc_history.append(train_acc)
-            if log_nth:
-                print('[Epoch %d/%d] TRAIN acc/loss: %.2f/%.3f' % (epoch + 1,
-                                                                   num_epochs,
-                                                                   train_acc*100,
-                                                                   train_loss))
+            #if log_nth:
+            #    print('[Epoch %d/%d] TRAIN acc/loss: %.2f/%.3f' % (epoch + 1,
+            #                                                       num_epochs,
+            #                                                       train_acc*100,
+            #                                                       train_loss))
             # VALIDATION
             val_losses = []
             val_scores = []
@@ -134,6 +134,6 @@ class Solver(object):
                     print("No improvement for " + 
                             str(self.early_stop_limit) + " epochs")
                     break
-        print("Best VAL acc: " + str(val_acc*100)[:5])
+        print("Best VAL acc: " + str(self.best_val_acc*100)[:5])
         print('FINISH.')
         return self.best_model
