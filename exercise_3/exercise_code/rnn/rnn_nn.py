@@ -45,6 +45,12 @@ class RNN(nn.Module):
         #                                YOUR CODE                            #
         #######################################################################
 
+        # init hidden_size
+        hidden_size = self.hidden_size
+
+        # get seq_len, batch_size, input_size from the shape of x
+        seq_len, batch_size, input_size = x.shape
+
         # Initialse h as 0 if these values are not given,
         # with the correct dimsensions
         if h is None:
@@ -58,12 +64,6 @@ class RNN(nn.Module):
             activation = torch.tanh
         if "relu" in self.activation:
             activation = torch.relu
-
-        # init hidden_size
-        hidden_size = self.hidden_size
-
-        # get seq_len, batch_size, input_size from the shape of x
-        seq_len, batch_size, input_size = x.shape
 
         # "run" the linear layers for x and h
         x = self.lin_x(x)
@@ -136,18 +136,18 @@ class LSTM(nn.Module):
         h_seq = []
         c_seq = []
 
+        # get seq_len, batch_size, input_size from the shape of x
+        seq_len, batch_size, input_size = x.shape
+
+        # init hidden_size
+        hidden_size = self.hidden_size
+
         # Initialse with correct dimesions if None
         if h is None:
             h = torch.zeros((1, batch_size, hidden_size))
 
         if c is None:
             c = torch.zeros((1, batch_size, hidden_size))
-
-        # get seq_len, batch_size, input_size from the shape of x
-        seq_len, batch_size, input_size = x.shape
-
-        # init hidden_size
-        hidden_size = self.hidden_size
 
         h = h.sum(0)
         c = c.sum(0)
@@ -169,10 +169,10 @@ class LSTM(nn.Module):
         i = torch.sigmoid(i_x[0] + i_h)
         o = torch.sigmoid(o_x[0] + o_h)
 
-        # build h_seq, c_seq
+        # build c_seq, h_seq
         # First entry is treated seperately
-        h_seq.append(o * torch.tanh(c_seq[-1]))
         c_seq.append(f * c + (i * torch.tanh(c_x[0] + c_h[0])))
+        h_seq.append(o * torch.tanh(c_seq[-1]))
 
         for t in range(1, seq_len):
             f_h = self.lin_f_h(h_seq[-1])
