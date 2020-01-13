@@ -9,7 +9,8 @@ class Solver(object):
                          "weight_decay": 0.0}
 
     def __init__(self, optim=torch.optim.Adam, optim_args={},
-                 loss_func=torch.nn.CrossEntropyLoss()):
+                 loss_func=torch.nn.CrossEntropyLoss(), 
+                 stop_limit=100, stop_early=False):
         optim_args_merged = self.default_adam_args.copy()
         optim_args_merged.update(optim_args)
         self.optim_args = optim_args_merged
@@ -18,8 +19,9 @@ class Solver(object):
 
         self.best_val_acc = 0
         self.best_model = None
-        self.early_stop_limit = 50
+        self.early_stop_limit = stop_limit
         self.early_stop_counter = 0
+        self.stop_early = stop_early
 
         self._reset_histories()
 
@@ -48,7 +50,11 @@ class Solver(object):
         iter_per_epoch = len(train_loader)
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         model.to(device)
-
+        if self.stop_early:
+            print("Early stopping: activated.")
+            print("Limit: " + str(self.early_stop_limit))
+        else:
+            print("Early stopping deactivated.")
         print('START TRAIN.')
 
         for epoch in range(num_epochs):
@@ -81,7 +87,7 @@ class Solver(object):
                                 targets_mask].detach().cpu().numpy())
             self.train_acc_history.append(train_acc)
             if log_nth:
-                print('[Epoch %d/%d] TRAIN acc/loss: %.3f/%.3f' % (epoch + 1,
+                print('[Epoch %d/%d] TRAIN acc/loss: %.2f/%.3f' % (epoch + 1,
                                                                    num_epochs,
                                                                    train_acc*100,
                                                                    train_loss))
@@ -108,22 +114,26 @@ class Solver(object):
             self.val_acc_history.append(val_acc)
             self.val_loss_history.append(val_loss)
             if log_nth:
-                print('[Epoch %d/%d] VAL   acc/loss: %.3f/%.3f' % (epoch + 1,
+                print('[Epoch %d/%d] VAL   acc/loss: %.2f/%.3f' % (epoch + 1,
                                                                    num_epochs,
                                                                    val_acc*100,
                                                                    val_loss))
-                print("Current patience: " + str(self.early_stop_counter + 1))
+                if self.stop_early:
+                    print("Current patience: " +
+                            str(self.early_stop_counter + 1))
             if val_acc > self.best_val_acc:
                 print("New best validition accuracy: " + str(val_acc*100)[:5])
                 self.best_val_acc = val_acc
                 self.best_model = model
-                self.early_stop_counter = -1
-            self.early_stop_counter += 1
-            if self.early_stop_counter >= self.early_stop_limit:
-                print("Early stopping.")
-                print("No improvement for " + 
-                        str(self.early_stop_limit) + " epochs")
-                break
+                if self.stop_early:
+                    self.early_stop_counter = -1
+            if self.stop_early:
+                self.early_stop_counter += 1
+                if self.early_stop_counter >= self.early_stop_limit:
+                    print("Early stopping.")
+                    print("No improvement for " + 
+                            str(self.early_stop_limit) + " epochs")
+                    break
         print("Best VAL acc: " + str(val_acc*100)[:5])
         print('FINISH.')
         return self.best_model
