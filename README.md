@@ -59,3 +59,24 @@ This repository holds my solutions for the [Introduction to Deep Learning](https
 - Implementaion of a dropout layer
 
 ***
+
+## Exercise 3
+### Semantic Segmentation
+- Working with MSRC-v2 Segmentation Dataset
+- Initialize training and validation data loaders.
+- Design and initialize a convolutional neural network architecture and is based on an already pretrained network.
+- Initialize a solver with a loss function that considers the unlabeled pixels.
+- Adjusting the solver to account for the unlabeled pixels.
+- Hyperparameter tuning and model training
+
+### Facial Keypoint Detection
+- Loading and visualizing Data
+- Preprocessing transforms
+- Implementing NaimishNet (https://arxiv.org/pdf/1710.00977.pdf)
+- Data iterating and batching
+- Hyperparameter tuning and model training
+
+### RNN and LSTM
+- Exploring vanishing gradients
+- Gradient comparison
+- MNIST image classification with RNNs
